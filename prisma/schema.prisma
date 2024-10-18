@@ -34,7 +34,7 @@ model Sheet {
   teacherId        Int
   MST1             Mst?      // Reference to Mst model
   MST2             Mst?      // Reference to Mst model
-  Quiz_Assignment  Assignment?      //Reference to Assignment model
+  Quiz_Assignment  Assignment?      //Reference to Assing
   EndSem           EndSem?      // Reference to EndSem model
 
   @@id([id, subjectCode]) // Composite primary key

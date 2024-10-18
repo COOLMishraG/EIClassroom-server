@@ -8,7 +8,23 @@ const prisma = new PrismaClient();
 
 // Route to create a new sheet entry
 router.post('/submit-form', async (req, res) => {
-  const { id, name, subjectCode, MST1, MST2, Quiz_Assignment, EndSem } = req.body;
+  const { 
+    id, 
+    name, 
+    subjectCode, 
+    MST1_Q1, 
+    MST1_Q2, 
+    MST1_Q3, 
+    MST2_Q1, 
+    MST2_Q2, 
+    MST2_Q3, 
+    Quiz_Assignment, 
+    EndSem_Q1, 
+    EndSem_Q2, 
+    EndSem_Q3, 
+    EndSem_Q4, 
+    EndSem_Q5 
+  } = req.body;
 
   try {
     // Find the teacher based on subjectCode
@@ -32,10 +48,18 @@ router.post('/submit-form', async (req, res) => {
         name,
         subjectCode,
         teacherId: subject.teacher.id, // Dynamically connect teacher through subjectCode
-        MST1: parseInt(MST1),
-        MST2: parseInt(MST2),
-        Quiz_Assignment: parseInt(Quiz_Assignment),
-        EndSem: parseInt(EndSem),
+        MST1_Q1: parseInt(MST1_Q1),
+        MST1_Q2: parseInt(MST1_Q2),
+        MST1_Q3: parseInt(MST1_Q3),
+        MST2_Q1: parseInt(MST2_Q1),
+        MST2_Q2: parseInt(MST2_Q2),
+        MST2_Q3: parseInt(MST2_Q3),
+        EndSem_Q1: parseInt(EndSem_Q1),
+        EndSem_Q2: parseInt(EndSem_Q2),
+        EndSem_Q3: parseInt(EndSem_Q3),
+        EndSem_Q4: parseInt(EndSem_Q4),
+        EndSem_Q5: parseInt(EndSem_Q5),
+        Quiz_Assignment: parseInt(Quiz_Assignment)
       },
     });
 
@@ -66,7 +90,21 @@ router.get('/sheets', async (req, res) => {
 // Route to update a specific sheet entry by ID and subjectCode
 router.put('/sheets/:id/:subjectCode', async (req, res) => {
   const { id, subjectCode } = req.params;
-  const { name, MST1, MST2, Quiz_Assignment, EndSem } = req.body;
+  const {         
+    name,
+    MST1_Q1,
+    MST1_Q2,
+    MST1_Q3,
+    MST2_Q1,
+    MST2_Q2,
+    MST2_Q3,
+    Quiz_Assignment,
+    EndSem_Q1,
+    EndSem_Q2,
+    EndSem_Q3,
+    EndSem_Q4,
+    EndSem_Q5 
+  } = req.body;
 
   try {
     const updatedSheet = await prisma.sheet.update({
@@ -78,10 +116,18 @@ router.put('/sheets/:id/:subjectCode', async (req, res) => {
       },
       data: {
         name,
-        MST1,
-        MST2,
+        MST1_Q1,
+        MST1_Q2,
+        MST1_Q3,
+        MST2_Q1,
+        MST2_Q2,
+        MST2_Q3,
         Quiz_Assignment,
-        EndSem,
+        EndSem_Q1,
+        EndSem_Q2,
+        EndSem_Q3,
+        EndSem_Q4,
+        EndSem_Q5
       },
     });
 
@@ -94,7 +140,7 @@ router.put('/sheets/:id/:subjectCode', async (req, res) => {
 
 const ExcelJS = require('exceljs');
 
-// Route to download an Excel sheet with averages and MSTB calculation
+// Route to download an Excel sheet with calculations and averages
 router.get('/download-sheets', async (req, res) => {
   const { subjectCode } = req.query; // Get subjectCode from query parameter
 
@@ -115,37 +161,77 @@ router.get('/download-sheets', async (req, res) => {
 
     // Add header row
     worksheet.columns = [
-      { header: 'ID', key: 'id', width: 10 },
+      { header: 'Enrollment Number', key: 'id', width: 20 },
       { header: 'Name', key: 'name', width: 30 },
-      { header: 'MST1', key: 'MST1', width: 10 },
-      { header: 'MST2', key: 'MST2', width: 10 },
-      { header: 'MSTB (Max of MST1 & MST2)', key: 'MSTB', width: 20 },
+      { header: 'Subject Code', key: 'subjectCode', width: 15 },
+      { header: 'MST1_Q1', key: 'MST1_Q1', width: 10 },
+      { header: 'MST1_Q2', key: 'MST1_Q2', width: 10 },
+      { header: 'MST1_Q3', key: 'MST1_Q3', width: 10 },
+      { header: 'MST1_Total', key: 'MST1_Total', width: 15 },
+      { header: 'MST2_Q1', key: 'MST2_Q1', width: 10 },
+      { header: 'MST2_Q2', key: 'MST2_Q2', width: 10 },
+      { header: 'MST2_Q3', key: 'MST2_Q3', width: 10 },
+      { header: 'MST2_Total', key: 'MST2_Total', width: 15 },
+      { header: 'MST_Best', key: 'MST_Best', width: 15 },
       { header: 'Quiz/Assignment', key: 'Quiz_Assignment', width: 20 },
-      { header: 'End Sem', key: 'EndSem', width: 10 },
+      { header: 'EndSem_Q1', key: 'EndSem_Q1', width: 10 },
+      { header: 'EndSem_Q2', key: 'EndSem_Q2', width: 10 },
+      { header: 'EndSem_Q3', key: 'EndSem_Q3', width: 10 },
+      { header: 'EndSem_Q4', key: 'EndSem_Q4', width: 10 },
+      { header: 'EndSem_Q5', key: 'EndSem_Q5', width: 10 },
+      { header: 'EndSem_Total', key: 'EndSem_Total', width: 15 },
     ];
 
-    // Add data rows with MSTB calculation
+    // Add data rows with calculations for MST1_Total, MST2_Total, MST_Best, and EndSem_Total
     sheets.forEach((sheet) => {
+      const MST1_Total = (sheet.MST1_Q1 || 0) + (sheet.MST1_Q2 || 0) + (sheet.MST1_Q3 || 0);
+      const MST2_Total = (sheet.MST2_Q1 || 0) + (sheet.MST2_Q2 || 0) + (sheet.MST2_Q3 || 0);
+      const MST_Best = Math.max(MST1_Total, MST2_Total);
+      const EndSem_Total = (sheet.EndSem_Q1 || 0) + (sheet.EndSem_Q2 || 0) + (sheet.EndSem_Q3 || 0) + (sheet.EndSem_Q4 || 0) + (sheet.EndSem_Q5 || 0);
+
       worksheet.addRow({
         id: sheet.id,
         name: sheet.name,
-        MST1: sheet.MST1,
-        MST2: sheet.MST2,
-        MSTB: Math.max(sheet.MST1 || 0, sheet.MST2 || 0), // Calculate MSTB dynamically
+        subjectCode: sheet.subjectCode,
+        MST1_Q1: sheet.MST1_Q1,
+        MST1_Q2: sheet.MST1_Q2,
+        MST1_Q3: sheet.MST1_Q3,
+        MST1_Total,
+        MST2_Q1: sheet.MST2_Q1,
+        MST2_Q2: sheet.MST2_Q2,
+        MST2_Q3: sheet.MST2_Q3,
+        MST2_Total,
+        MST_Best,
         Quiz_Assignment: sheet.Quiz_Assignment,
-        EndSem: sheet.EndSem,
+        EndSem_Q1: sheet.EndSem_Q1,
+        EndSem_Q2: sheet.EndSem_Q2,
+        EndSem_Q3: sheet.EndSem_Q3,
+        EndSem_Q4: sheet.EndSem_Q4,
+        EndSem_Q5: sheet.EndSem_Q5,
+        EndSem_Total,
       });
     });
 
     // Add the average row at the end of the data
-    const lastRowNumber = worksheet.lastRow.number + 1; // Calculate the last row number
+    const lastRowNumber = worksheet.lastRow.number;
     worksheet.addRow({
       id: 'Average',
-      MST1: { formula: `AVERAGE(C2:C${lastRowNumber - 1})` }, // Average for MST1
-      MST2: { formula: `AVERAGE(D2:D${lastRowNumber - 1})` }, // Average for MST2
-      MSTB: { formula: `AVERAGE(E2:E${lastRowNumber - 1})` }, // Average for MSTB
-      Quiz_Assignment: { formula: `AVERAGE(F2:F${lastRowNumber - 1})` }, // Average for Quiz/Assignments
-      EndSem: { formula: `AVERAGE(G2:G${lastRowNumber - 1})` }, // Average for End Sem
+      MST1_Q1: { formula: `AVERAGE(D2:D${lastRowNumber})` },
+      MST1_Q2: { formula: `AVERAGE(E2:E${lastRowNumber})` },
+      MST1_Q3: { formula: `AVERAGE(F2:F${lastRowNumber})` },
+      MST1_Total: { formula: `AVERAGE(G2:G${lastRowNumber})` },
+      MST2_Q1: { formula: `AVERAGE(H2:H${lastRowNumber})` },
+      MST2_Q2: { formula: `AVERAGE(I2:I${lastRowNumber})` },
+      MST2_Q3: { formula: `AVERAGE(J2:J${lastRowNumber})` },
+      MST2_Total: { formula: `AVERAGE(K2:K${lastRowNumber})` },
+      MST_Best: { formula: `AVERAGE(L2:L${lastRowNumber})` },
+      Quiz_Assignment: { formula: `AVERAGE(M2:M${lastRowNumber})` },
+      EndSem_Q1: { formula: `AVERAGE(N2:N${lastRowNumber})` },
+      EndSem_Q2: { formula: `AVERAGE(O2:O${lastRowNumber})` },
+      EndSem_Q3: { formula: `AVERAGE(P2:P${lastRowNumber})` },
+      EndSem_Q4: { formula: `AVERAGE(Q2:Q${lastRowNumber})` },
+      EndSem_Q5: { formula: `AVERAGE(R2:R${lastRowNumber})` },
+      EndSem_Total: { formula: `AVERAGE(S2:S${lastRowNumber})` },
     }).font = { bold: true }; // Make the average row bold
 
     // Set response headers for the download

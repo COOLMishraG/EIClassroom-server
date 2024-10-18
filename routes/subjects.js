@@ -16,6 +16,7 @@ router.post('/newsubject', authenticateToken, async (req, res) => {
     });
     res.status(201).json(subject);
   } catch (error) {
+    console.error("Error creating subject:", error);
     res.status(500).json({ error: "Failed to create subject" });
   }
 });
